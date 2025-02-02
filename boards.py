@@ -114,7 +114,8 @@ class GridBoard(BoardGame):
     pos = self.index_to_position(pos_idx)
     possible_moves = self.get_possible_moves_alien(pos)
     
-    probs = np.zeros(self.rows * self.cols)
+    probs = np.ones(self.rows * self.cols) * 1e-5
+    # probs = np.zeros(self.rows * self.cols)
     for move in possible_moves:
       probs[self.position_to_index(move)] = 1
     
@@ -136,6 +137,5 @@ class GridBoard(BoardGame):
     # Normalize
     if probs.sum() > 0:
       probs = probs / probs.sum()
-    print(f'{probs.shape=}')
     return probs
 

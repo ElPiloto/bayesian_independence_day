@@ -1,6 +1,8 @@
 from absl.testing import absltest
 import models
 import boards
+import pymc as pm
+import numpy as np
 
 
 class OracleModelTests(absltest.TestCase):
@@ -14,13 +16,34 @@ DSSH"""
 
 
   def test_can_find_human(self):
-    observations = [
-        boards.Position(3, 3),
-        boards.Position(2, 3),
+    human_obs = [
+        boards.Position(2, 3),  # First move is near human corner
         boards.Position(1, 3),
+    ]
+    observations = [
+        self.unambiguous_board.position_to_index(o) for o in human_obs
     ]
     om = models.OracleModel(self.unambiguous_board)
     model = om.create_model(observations)
+
+    with model:
+      trace = pm.sample(1000, tune=1000)
+      self.assertEqual(trace.posterior['is_alien'].mean().item(), 0)
+
+  def test_can_find_alien(self):
+    alien_obs = [
+        boards.Position(0, 1),  # First move is near alien corner
+        boards.Position(0, 2),
+    ]
+    observations = [
+        self.unambiguous_board.position_to_index(o) for o in alien_obs
+    ]
+    om = models.OracleModel(self.unambiguous_board)
+    model = om.create_model(observations)
+
+    with model:
+      trace = pm.sample(1000, tune=1000)
+      self.assertEqual(trace.posterior['is_alien'].mean().item(), 1)
 
 
 
